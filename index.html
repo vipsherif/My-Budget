@@ -571,8 +571,42 @@ window.getDoc = getDoc;
 window.onSnapshot = onSnapshot;
 
 console.log("Firebase Connected!");
+async function saveToCloud(){
 
+  const data = {
+    CF: CF,
+    logs: logs
+  };
+
+  await setDoc(
+    doc(db, "budget", "main"),
+    data
+  );
+
+  console.log("Saved!");
+
+}
+
+async function loadFromCloud(){
+
+  const snap = await getDoc(
+    doc(db, "budget", "main")
+  );
+
+  if(snap.exists()){
+
+    const data = snap.data();
+
+    if(data.CF) CF = data.CF;
+    if(data.logs) logs = data.logs;
+
+  }
+
+  render();
+
+}
+
+loadFromCloud();
 </script>
-render();
-</script>
+
 </body></html>
