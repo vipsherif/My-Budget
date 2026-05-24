@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Budget">
+<title>My Budget</title>
+<style>
+:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--text:#f1f5f9;--sub:#94a3b8;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a855f7;--border:#334155;--card:#1e293b;--radius:14px;--nav:60px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;min-height:100vh;padding-bottom:var(--nav);}
+.screen{display:none;padding:16px;padding-top:env(safe-area-inset-top,16px);max-width:430px;margin:0 auto;}
+.screen.active{display:block;}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);display:flex;height:var(--nav);padding-bottom:env(safe-area-inset-bottom,0);z-index:100;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--sub);font-size:10px;cursor:pointer;transition:.2s;}
+.nav-btn.active{color:var(--blue);}
+.nav-btn svg{width:22px;height:22px;}
+h1{font-size:22px;font-weight:700;margin-bottom:4px;}
+h2{font-size:16px;font-weight:600;margin:16px 0 8px;}
+.sub{color:var(--sub);font-size:13px;}
+.card{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:10px;border:1px solid var(--border);}
+.card-row{display:flex;justify-content:space-between;align-items:center;}
+.card-label{font-size:13px;color:var(--sub);}
+.card-value{font-size:15px;font-weight:600;}
+.big-val{font-size:28px;font-weight:700;}
+.g{color:var(--green)}.r{color:var(--red)}.a{color:var(--amber)}.b{color:var(--blue)}
+.tag{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;}
+.tag-g{background:#14532d;color:#86efac;}
+.tag-r{background:#7f1d1d;color:#fca5a5;}
+.tag-a{background:#78350f;color:#fde68a;}
+.section-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);margin:16px 0 8px;}
+.prog-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px;}
+.prog-fill{height:100%;border-radius:3px;transition:.3s;}
+.divider{height:1px;background:var(--border);margin:10px 0;}
+.btn{width:100%;padding:14px;border-radius:var(--radius);border:none;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-secondary{background:var(--bg3);color:var(--text);}
+.btn-danger{background:#7f1d1d;color:#fca5a5;}
+.btn-success{background:#14532d;color:#86efac;}
+.input-group{margin-bottom:12px;}
+.input-group label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px;}
+.input-group input,.input-group select{width:100%;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;}
+.input-group select option{background:var(--bg2);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-end;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:430px;margin:0 auto;padding-bottom:calc(20px + env(safe-area-inset-bottom,0));}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:16px;text-align:center;}
+.cf-table{width:100%;font-size:11px;border-collapse:collapse;}
+.cf-table th{background:var(--bg3);padding:6px 5px;text-align:right;color:var(--sub);white-space:nowrap;font-weight:500;}
+.cf-table th:first-child{text-align:left;position:sticky;left:0;background:var(--bg3);}
+.cf-table td{padding:5px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;}
+.cf-table td:first-child{text-align:left;position:sticky;left:0;background:var(--bg2);font-size:10px;color:var(--sub);}
+.cf-table .row-inc td{background:#0f2d1a;}
+.cf-table .row-inc td:first-child{background:#0f2d1a;}
+.cf-table .row-out td{background:#2d0f0f;}
+.cf-table .row-out td:first-child{background:#2d0f0f;}
+.cf-table .row-ti td{background:#14532d;font-weight:600;}
+.cf-table .row-ti td:first-child{background:#14532d;}
+.cf-table .row-to td{background:#7f1d1d;font-weight:600;}
+.cf-table .row-to td:first-child{background:#7f1d1d;}
+.cf-table .row-op td{background:#1e3a5f;font-weight:600;}
+.cf-table .row-op td:first-child{background:#1e3a5f;}
+.cf-table .row-cl td{background:#1d4ed8;font-weight:700;font-size:12px;}
+.cf-table .row-cl td:first-child{background:#1d4ed8;}
+.cf-scroll{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:.3s;pointer-events:none;}
+.toast.show{opacity:1;}
+.flag{border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:12px;line-height:1.5;border:1px solid;}
+.flag b{display:block;margin-bottom:2px;font-size:13px;}
+.flag-w{background:#78350f33;border-color:var(--amber);color:#fde68a;}
+.flag-g{background:#14532d33;border-color:var(--green);color:#86efac;}
+.flag-b{background:#1e3a8a33;border-color:var(--blue);color:#93c5fd;}
+.flag-d{background:var(--bg3);border-color:var(--border);color:var(--sub);}
+.act-badge{font-size:9px;background:var(--amber);color:#000;padding:1px 5px;border-radius:4px;margin-left:5px;}
+</style></head><body>
+
+<!-- SCREENS -->
+<div class="screen active" id="screen-dashboard">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+    <div><div class="sub" id="dash-date"></div><h1>My Budget</h1></div>
+    <div style="text-align:right;"><div class="sub" style="font-size:11px;">Rate</div><div style="font-weight:700;color:var(--amber);" id="dash-rate"></div></div>
+  </div>
+
+  <div class="card" style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8);border-color:#3b82f6;">
+    <div class="card-label">Total UAE Cash</div>
+    <div class="big-val g" id="d-uae-total"></div>
+    <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="d-uae-breakdown"></div>
+  </div>
+
+  <div class="card" style="background:linear-gradient(135deg,#14532d,#15803d);border-color:#22c55e;">
+    <div class="card-label">Total Egypt Cash (EGP)</div>
+    <div class="big-val g" id="d-egp-total"></div>
+    <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="d-egp-breakdown"></div>
+  </div>
+
+  <div class="section-title">Upcoming Payments</div>
+  <div id="d-upcoming"></div>
+
+  <div class="section-title">Credit Card Summary</div>
+  <div id="d-cards-summary"></div>
+</div>
+
+<div class="screen" id="screen-accounts">
+  <h1>Accounts</h1>
+  <div class="section-title">UAE Accounts (AED)</div>
+  <div id="acc-uae"></div>
+  <div class="section-title">Egypt Accounts (EGP)</div>
+  <div id="acc-egp"></div>
+  <button class="btn btn-primary" onclick="openModal('modal-update-account')">Update Balance</button>
+</div>
+
+<div class="screen" id="screen-cards">
+  <h1>Credit Cards</h1>
+  <div class="section-title">UAE Cards</div>
+  <div id="cards-uae"></div>
+  <div class="section-title">Egypt Cards (EGP)</div>
+  <div id="cards-egp"></div>
+  <button class="btn btn-primary" onclick="openModal('modal-update-card')">Update Card</button>
+</div>
+
+<div class="screen" id="screen-cashflow">
+  <h1>Cash Flow</h1>
+  <div class="sub" style="margin-bottom:12px;">12-month projection · AED</div>
+  <div class="cf-scroll"><table class="cf-table" id="cf-table"></table></div>
+  <div style="margin-top:14px;" id="cf-flags"></div>
+</div>
+
+<div class="screen" id="screen-update">
+  <h1>Quick Update</h1>
+  <div class="section-title">Log a Transaction</div>
+  <div class="input-group"><label>Type</label>
+    <select id="upd-type">
+      <option value="account">Account Balance Update</option>
+      <option value="transfer">Transfer (AED → EGP)</option>
+      <option value="card">Card Balance Update</option>
+      <option value="expense">Log Expense</option>
+    </select>
+  </div>
+  <div class="input-group"><label>Account / Card</label>
+    <select id="upd-account"></select>
+  </div>
+  <div class="input-group"><label>Amount</label>
+    <input type="number" id="upd-amount" placeholder="0.00" inputmode="decimal">
+  </div>
+  <div class="input-group"><label>Note (optional)</label>
+    <input type="text" id="upd-note" placeholder="e.g. WIO CC payment">
+  </div>
+  <button class="btn btn-primary" onclick="logTransaction()">Save</button>
+
+  <div class="section-title">Recent Updates</div>
+  <div id="recent-log"></div>
+  <button class="btn btn-danger" style="margin-top:8px;" onclick="clearLog()">Clear Log</button>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-update-account" onclick="closeModal(this)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Update Account Balance</div>
+    <div class="input-group"><label>Account</label>
+      <select id="m-acc-name"></select>
+    </div>
+    <div class="input-group"><label>New Balance</label>
+      <input type="number" id="m-acc-val" placeholder="0.00" inputmode="decimal">
+    </div>
+    <button class="btn btn-primary" onclick="saveAccount()">Save</button>
+    <button class="btn btn-secondary" onclick="closeModal(document.getElementById('modal-update-account'))">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-update-card" onclick="closeModal(this)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Update Card Balance</div>
+    <div class="input-group"><label>Card</label>
+      <select id="m-card-name"></select>
+    </div>
+    <div class="input-group"><label>Outstanding / Used</label>
+      <input type="number" id="m-card-used" placeholder="0.00" inputmode="decimal">
+    </div>
+    <button class="btn btn-primary" onclick="saveCard()">Save</button>
+    <button class="btn btn-secondary" onclick="closeModal(document.getElementById('modal-update-card'))">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="nav('dashboard',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </button>
+  <button class="nav-btn" onclick="nav('accounts',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Accounts
+  </button>
+  <button class="nav-btn" onclick="nav('cards',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+    Cards
+  </button>
+  <button class="nav-btn" onclick="nav('cashflow',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Cash Flow
+  </button>
+  <button class="nav-btn" onclick="nav('update',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Update
+  </button>
+</nav>
+
+<script>
+// ─── DEFAULT DATA ───────────────────────────────────────────────
+const DEFAULTS = {
+  rate: 14.5,
+  uae: [
+    {name:"WIO",       bal:124777.16},
+    {name:"ADCB",      bal:30685.17},
+    {name:"ENBD",      bal:2168.79},
+    {name:"EI",        bal:270.00}
+  ],
+  egp: [
+    {name:"NBE",       bal:11564},
+    {name:"AAIB (mine)",bal:1083},
+    {name:"CIB",       bal:1734},
+    {name:"AAIB wife", bal:0}
+  ],
+  uaeCards:[
+    {name:"WIO CC",  limit:72000,   used:68681.24, currency:"AED"},
+    {name:"Tabby",   limit:10000,   used:9356.50,  currency:"AED"}
+  ],
+  egpCards:[
+    {name:"NBE",           limit:200000, used:199604, currency:"EGP"},
+    {name:"AAIB Signature",limit:62000,  used:0,      currency:"EGP"},
+    {name:"AAIB Platinum", limit:50000,  used:0,      currency:"EGP"},
+    {name:"AAIB Wife Sig", limit:120000, used:0,      currency:"EGP"},
+    {name:"CIB",           limit:50000,  used:0,      currency:"EGP"}
+  ],
+  upcoming:[
+    {label:"WIO CC (28 May)",    amt:10393, currency:"AED", urgent:true},
+    {label:"Tabby (28 May)",     amt:750,   currency:"AED", urgent:true},
+    {label:"Friend balance",     amt:3850,  currency:"AED", urgent:true},
+    {label:"NBE transfer (Jun)", amt:3702,  currency:"AED", urgent:false},
+    {label:"Project transfer",   amt:48000, currency:"AED", urgent:false},
+    {label:"Personal loan (Jun 26)",amt:8030,currency:"AED",urgent:false}
+  ],
+  log:[]
+};
+
+// ─── STATE ──────────────────────────────────────────────────────
+function load(){
+  try{ return JSON.parse(localStorage.getItem('sherif_budget')||'null') || JSON.parse(JSON.stringify(DEFAULTS)); }
+  catch(e){ return JSON.parse(JSON.stringify(DEFAULTS)); }
+}
+function save(s){ localStorage.setItem('sherif_budget', JSON.stringify(s)); }
+let S = load();
+
+// ─── CASHFLOW DATA ───────────────────────────────────────────────
+const CF_MONTHS = ["May'26","Jun'26","Jul'26","Aug'26","Sep'26","Oct'26","Nov'26","Dec'26","Jan'27","Feb'27","Mar'27","Apr'27"];
+const CF = {
+  sal: [21014,23269,23269,23269,23269,28269,28269,28269,28269,28269,28269,28269],
+  ot:  [44584,0,0,35000,0,0,0,30000,0,975,0,0],
+  otn: ["Profit share","","","Edu allow.","","","","Edu allow.","","Edu bal.","",""],
+  pl:  [0,8030,8030,8030,8030,8030,8030,8030,8030,8030,8030,8030],
+  frd: [18850,0,0,0,0,0,0,0,0,0,0,0],
+  prj: [0,48000,0,0,0,0,0,0,0,0,0,0],
+  tab: [750,750,750,750,750,750,750,750,750,750,750,750],
+  cc:  [10393,9297,9297,9297,9297,7455,3639,3639,3639,3639,741,349],
+  hs:  [20500,0,3500,3500,3500,3500,3500,3500,3500,3500,3500,3500],
+  dl:  [3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000],
+  eg:  [9767,3702,12275,100,828,3931,828,21414,3931,828,828,3931]
+};
+const CF_INC  = CF_MONTHS.map((_,i)=>CF.sal[i]+CF.ot[i]);
+const CF_OUT  = CF_MONTHS.map((_,i)=>CF.pl[i]+CF.frd[i]+CF.prj[i]+CF.tab[i]+CF.cc[i]+CF.hs[i]+CF.dl[i]+CF.eg[i]);
+const CF_NET  = CF_MONTHS.map((_,i)=>CF_INC[i]-CF_OUT[i]);
+const CF_OP=[],CF_CL=[];
+let cfb=107289;
+CF_MONTHS.forEach((_,i)=>{CF_OP.push(cfb);cfb+=CF_NET[i];CF_CL.push(cfb);});
+
+// ─── HELPERS ─────────────────────────────────────────────────────
+const f  = (v,d=0)=>Math.abs(v).toLocaleString('en',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fc = v=>v<0?'r':v<30000?'a':'g';
+const pct= (u,l)=>Math.min(100,Math.round(u/l*100));
+
+function toast(msg,ok=true){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=ok?'var(--green)':'var(--red)';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);
+}
+function nav(id,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  btn.classList.add('active');
+  renderAll();
+}
+function openModal(id){populateModals();document.getElementById(id).classList.add('open');}
+function closeModal(el){el.classList.remove('open');}
+
+// ─── RENDER DASHBOARD ────────────────────────────────────────────
+function renderDashboard(){
+  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('dash-rate').textContent='14.5 EGP/AED';
+  
+  const uaeTotal=S.uae.reduce((a,b)=>a+b.bal,0);
+  const egpTotal=S.egp.reduce((a,b)=>a+b.bal,0);
+  
+  document.getElementById('d-uae-total').textContent='AED '+f(uaeTotal,2);
+  document.getElementById('d-egp-total').textContent='EGP '+f(egpTotal,0);
+  
+  document.getElementById('d-uae-breakdown').innerHTML=S.uae.map(a=>
+    `<div style="background:rgba(255,255,255,.1);border-radius:8px;padding:6px 8px;">
+      <div style="font-size:10px;color:#93c5fd;">${a.name}</div>
+      <div style="font-size:13px;font-weight:600;">${f(a.bal,0)}</div>
+    </div>`).join('');
+  
+  document.getElementById('d-egp-breakdown').innerHTML=S.egp.map(a=>
+    `<div style="background:rgba(255,255,255,.1);border-radius:8px;padding:6px 8px;">
+      <div style="font-size:10px;color:#86efac;">${a.name}</div>
+      <div style="font-size:13px;font-weight:600;">${f(a.bal,0)}</div>
+    </div>`).join('');
+  
+  document.getElementById('d-upcoming').innerHTML=S.upcoming.map(u=>
+    `<div class="card" style="border-color:${u.urgent?'var(--red)':'var(--border)'};">
+      <div class="card-row">
+        <div><div class="card-label">${u.label}</div></div>
+        <div style="text-align:right;">
+          <span class="${u.urgent?'r':'a'}" style="font-size:16px;font-weight:700;">${u.currency} ${f(u.amt,0)}</span>
+          ${u.urgent?'<span class="tag tag-r" style="display:block;margin-top:2px;">Due soon</span>':''}
+        </div>
+      </div>
+    </div>`).join('');
+  
+  const allCards=[...S.uaeCards,...S.egpCards];
+  document.getElementById('d-cards-summary').innerHTML=allCards.map(c=>{
+    const free=c.limit-c.used;
+    const p=pct(c.used,c.limit);
+    const col=p>90?'var(--red)':p>70?'var(--amber)':'var(--green)';
+    return `<div class="card">
+      <div class="card-row"><span style="font-weight:600;">${c.name}</span><span class="tag ${p>90?'tag-r':p>70?'tag-a':'tag-g'}">${p}% used</span></div>
+      <div class="prog-bar" style="margin-top:8px;"><div class="prog-fill" style="width:${p}%;background:${col};"></div></div>
+      <div class="card-row" style="margin-top:6px;">
+        <span class="card-label">Free: ${c.currency} ${f(free,0)}</span>
+        <span class="card-label">Limit: ${c.currency} ${f(c.limit,0)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── RENDER ACCOUNTS ─────────────────────────────────────────────
+function renderAccounts(){
+  document.getElementById('acc-uae').innerHTML=S.uae.map((a,i)=>
+    `<div class="card">
+      <div class="card-row">
+        <div><div style="font-weight:600;font-size:15px;">${a.name}</div><div class="card-label">UAE · AED</div></div>
+        <div class="g" style="font-size:20px;font-weight:700;">${f(a.bal,2)}</div>
+      </div>
+    </div>`).join('');
+  
+  document.getElementById('acc-egp').innerHTML=S.egp.map((a,i)=>
+    `<div class="card">
+      <div class="card-row">
+        <div><div style="font-weight:600;font-size:15px;">${a.name}</div><div class="card-label">Egypt · EGP</div></div>
+        <div class="g" style="font-size:20px;font-weight:700;">${f(a.bal,0)}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── RENDER CARDS ────────────────────────────────────────────────
+function renderCards(){
+  const render=(cards)=>cards.map(c=>{
+    const free=c.limit-c.used;
+    const p=pct(c.used,c.limit);
+    const col=p>90?'var(--red)':p>70?'var(--amber)':'var(--green)';
+    return `<div class="card">
+      <div class="card-row"><span style="font-weight:600;font-size:15px;">${c.name}</span><span class="tag ${p>90?'tag-r':p>70?'tag-a':'tag-g'}">${p}%</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${col};"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px;">
+        <div><div class="card-label">Limit</div><div style="font-weight:600;">${f(c.limit,0)}</div></div>
+        <div><div class="card-label">Used</div><div class="r" style="font-weight:600;">${f(c.used,0)}</div></div>
+        <div><div class="card-label">Free</div><div class="g" style="font-weight:600;">${f(free,0)}</div></div>
+      </div>
+      <div class="card-label" style="margin-top:4px;text-align:right;">${c.currency}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('cards-uae').innerHTML=render(S.uaeCards);
+  document.getElementById('cards-egp').innerHTML=render(S.egpCards);
+}
+
+// ─── RENDER CASHFLOW ─────────────────────────────────────────────
+function renderCashflow(){
+  const t=document.getElementById('cf-table');
+  const rows=[
+    {l:'Opening',   vals:CF_OP,  cls:'row-op', fmt:v=>`<span class="${fc(v)}">${f(v,0)}</span>`},
+    {l:'Salary',    vals:CF.sal, cls:'row-inc',fmt:v=>v?`<span class="g">${f(v,0)}</span>`:'—'},
+    {l:'One-time',  vals:CF.ot,  cls:'row-inc',fmt:(v,i)=>v?`<span class="g">${f(v,0)}</span><div style="font-size:8px;color:#86efac;">${CF.otn[i]}</div>`:'—'},
+    {l:'Total In',  vals:CF_INC, cls:'row-ti', fmt:v=>`${f(v,0)}`},
+    {l:'Loan',      vals:CF.pl,  cls:'row-out',fmt:v=>v?f(v,0):'—'},
+    {l:'Friend',    vals:CF.frd, cls:'row-out',fmt:v=>v?f(v,0):'—'},
+    {l:'Project',   vals:CF.prj, cls:'row-out',fmt:v=>v?f(v,0):'—'},
+    {l:'Tabby',     vals:CF.tab, cls:'row-out',fmt:v=>v?f(v,0):'—'},
+    {l:'WIO CC',    vals:CF.cc,  cls:'row-out',fmt:v=>v?f(v,0):'—'},
+    {l:'Rent/Mort', vals:CF.hs,  cls:'row-out',fmt:v=>v?f(v,0):'—'},
+    {l:'Living',    vals:CF.dl,  cls:'row-out',fmt:v=>v?f(v,0):'—'},
+    {l:'Egypt',     vals:CF.eg,  cls:'row-out',fmt:v=>v?f(v,0):'—'},
+    {l:'Total Out', vals:CF_OUT, cls:'row-to', fmt:v=>`${f(v,0)}`},
+    {l:'Balance',   vals:CF_CL,  cls:'row-cl', fmt:v=>`<span class="${fc(v)}">${f(v,0)}</span>`},
+  ];
+  
+  let html='<thead><tr><th>Item</th>'+CF_MONTHS.map((m,i)=>`<th>${m}${i===0?'<span class="act-badge">ACT</span>':''}</th>`).join('')+'</tr></thead><tbody>';
+  rows.forEach(r=>{
+    html+=`<tr class="${r.cls}"><td>${r.l}</td>`;
+    r.vals.forEach((v,i)=>{ html+=`<td>${r.fmt(v,i)}</td>`; });
+    html+='</tr>';
+  });
+  html+='</tbody>';
+  t.innerHTML=html;
+  
+  document.getElementById('cf-flags').innerHTML=[
+    {c:'flag-w',t:'⚠ Jun — tightest month',b:'Project 48k + Egypt 3,702 + loan + CC = ~73k out vs 23k income. Closes ~59k. Covered by May surplus.'},
+    {c:'flag-w',t:'⚠ Jul — school pt2 + apt',b:'131,550 EGP clear + apt = 12,275 AED to Egypt. Plus mortgage + loan + CC. Wife car TBD (~20k AED).'},
+    {c:'flag-g',t:'Aug — edu allowance 35,000 AED',b:'Only 100 AED to Egypt. Balance jumps ~107k. Strong buffer.'},
+    {c:'flag-g',t:'Oct 2026+ — acceleration',b:'Full flying hours + WIO CC drops sharply Nov. Apr 27 closes ~161k.'},
+  ].map(x=>`<div class="flag ${x.c}"><b>${x.t}</b>${x.b}</div>`).join('');
+}
+
+// ─── RENDER UPDATE ───────────────────────────────────────────────
+function renderUpdate(){
+  const all=[...S.uae.map(a=>a.name+' (AED)'),...S.egp.map(a=>a.name+' (EGP)')];
+  document.getElementById('upd-account').innerHTML=all.map(a=>`<option>${a}</option>`).join('');
+  
+  const log=S.log||[];
+  document.getElementById('recent-log').innerHTML=log.length?
+    log.slice().reverse().slice(0,15).map(l=>
+      `<div class="card" style="padding:10px;">
+        <div class="card-row"><span style="font-weight:600;">${l.account}</span><span class="${l.amt>0?'g':'r'}" style="font-weight:600;">${l.amt>0?'+':''}${f(Math.abs(l.amt),2)}</span></div>
+        <div class="card-row" style="margin-top:2px;"><span class="card-label">${l.note||l.type}</span><span class="card-label">${l.date}</span></div>
+      </div>`).join('')
+    :'<div class="sub" style="text-align:center;padding:20px;">No updates yet</div>';
+}
+
+// ─── POPULATE MODALS ─────────────────────────────────────────────
+function populateModals(){
+  const allAcc=[...S.uae.map(a=>({...a,currency:'AED'})),...S.egp.map(a=>({...a,currency:'EGP'}))];
+  document.getElementById('m-acc-name').innerHTML=allAcc.map(a=>`<option>${a.name} (${a.currency})</option>`).join('');
+  const allCards=[...S.uaeCards,...S.egpCards];
+  document.getElementById('m-card-name').innerHTML=allCards.map(c=>`<option>${c.name} (${c.currency})</option>`).join('');
+}
+
+// ─── SAVE FUNCTIONS ──────────────────────────────────────────────
+function saveAccount(){
+  const name=document.getElementById('m-acc-name').value;
+  const val=parseFloat(document.getElementById('m-acc-val').value);
+  if(isNaN(val)){toast('Enter a valid amount',false);return;}
+  const isEGP=name.includes('EGP');
+  const arr=isEGP?S.egp:S.uae;
+  const cleanName=name.replace(' (AED)','').replace(' (EGP)','');
+  const acc=arr.find(a=>a.name===cleanName);
+  if(acc){acc.bal=val;save(S);renderAll();toast('Updated '+cleanName);}
+  closeModal(document.getElementById('modal-update-account'));
+}
+
+function saveCard(){
+  const name=document.getElementById('m-card-name').value;
+  const val=parseFloat(document.getElementById('m-card-used').value);
+  if(isNaN(val)){toast('Enter a valid amount',false);return;}
+  const isEGP=name.includes('EGP');
+  const arr=isEGP?S.egpCards:S.uaeCards;
+  const cleanName=name.replace(' (AED)','').replace(' (EGP)','');
+  const card=arr.find(c=>c.name===cleanName);
+  if(card){card.used=val;save(S);renderAll();toast('Updated '+cleanName);}
+  closeModal(document.getElementById('modal-update-card'));
+}
+
+function logTransaction(){
+  const type=document.getElementById('upd-type').value;
+  const account=document.getElementById('upd-account').value;
+  const amt=parseFloat(document.getElementById('upd-amount').value);
+  const note=document.getElementById('upd-note').value;
+  if(isNaN(amt)){toast('Enter a valid amount',false);return;}
+  if(!S.log)S.log=[];
+  S.log.push({type,account,amt,note,date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})});
+  save(S);renderAll();
+  document.getElementById('upd-amount').value='';
+  document.getElementById('upd-note').value='';
+  toast('Transaction logged');
+}
+
+function clearLog(){
+  if(confirm('Clear all log entries?')){S.log=[];save(S);renderUpdate();toast('Log cleared');}
+}
+
+// ─── MAIN ────────────────────────────────────────────────────────
+function renderAll(){
+  renderDashboard();
+  renderAccounts();
+  renderCards();
+  renderCashflow();
+  renderUpdate();
+}
+renderAll();
+</script>
+</body></html>
