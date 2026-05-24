@@ -539,6 +539,40 @@ function render(){
     {c:'fb',t:'Oct 2026+ — accelerating',b:'Full flying + WIO CC drops sharply Nov. Apr 27 closes ~161k.'},
   ].map(x=>`<div class="flag ${x.c}"><b>${x.t}</b>${x.b}</div>`).join('');
 }
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCkEV_Eez4Id217mbneYAPzARnTpBMXVR8",
+  authDomain: "mybudgetapp-f4026.firebaseapp.com",
+  projectId: "mybudgetapp-f4026",
+  storageBucket: "mybudgetapp-f4026.firebasestorage.app",
+  messagingSenderId: "503630275367",
+  appId: "1:503630275367:web:b85999af5fb1f60a157f02"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+window.db = db;
+window.doc = doc;
+window.setDoc = setDoc;
+window.getDoc = getDoc;
+window.onSnapshot = onSnapshot;
+
+console.log("Firebase Connected!");
+
+</script>
 render();
 </script>
 </body></html>
