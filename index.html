@@ -588,6 +588,7 @@ async function saveToCloud(){
 }
 
 async function loadFromCloud(){
+  saveToCloud();
 
   const snap = await getDoc(
     doc(db, "budget", "main")
